@@ -202,6 +202,30 @@ Bits    Name    Description
 NOTE: The fields are packed into `fcsr` to make context-save/restore
 faster.
 
+=== Vector Context Status in `mstatus`
+
+A vector context status field, `VS`, is added to `mstatus[24:23]` and shadowed
+in `sstatus[24:23]`.  It is defined analogously to the floating-point context
+status field, `FS`.
+
+Attempts to execute any vector instruction, or to access the `vl`, `vtype`,
+or `vstart` CSRs, raise an illegal-instruction exception when the `VS` field
+is set to Off.
+
+When the `VS` field is set to Initial or Clean, executing any instruction
+that changes vector state, including the `vl`, `vtype`, and `vstart` registers,
+will change `VS` to Dirty.
+
+Attempts to access the `fcsr`, `vxsat`, or `vxrm` CSRs raise an illegal-instruction
+exception when _both_ `VS` and the floating-point context status `FS` are set to Off.
+
+If `VS` is set to Initial or Clean, executing any instruction that changes
+`fcsr`, `vxsat`, or `vxrm` will change `VS` to Dirty.  If `FS` is set to Initial or Clean,
+executing any instruction that changes `fcsr`, `vxsat`, or `vxrm` will change `FS` to Dirty.
+(If either `VS` or `FS` is set to Off, it will remain Off.)
+
+NOTE: Context-switching code must save all of `fcsr` if either `FS` or `VS` is set to Dirty.
+
 === Vector type register, `vtype`
 
 The read-only XLEN-wide _vector_ _type_ CSR, `vtype`, can only be
